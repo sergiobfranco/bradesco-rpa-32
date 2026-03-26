@@ -1,0 +1,44 @@
+{
+  "NameProject": "Ifood_opcoes_adicionais",
+  "Main": "Bot.xaml",
+  "Description": null,
+  "Tecnology": "Python",
+  "Dependencies": [],
+  "WebDrivers": [
+    {
+      "Import": "CHROME,C:\\RPA\\WebDrivers\\chromedriver\\chromedriver.exe"
+    },
+    {
+      "Import": "CUSTOM,C:\\RPA\\WebDrivers\\custom\\custom.exe"
+    },
+    {
+      "Import": "EDGE,C:\\RPA\\WebDrivers\\msedgedriver\\msedgedriver.exe"
+    },
+    {
+      "Import": "FIREFOX,C:\\RPA\\WebDrivers\\geckodriver\\geckodriver.exe"
+    }
+  ],
+  "MaestroLogin": null,
+  "Packages": [
+    {
+      "Import": "JornadaRPA.Web"
+    },
+    {
+      "Import": "JornadaRPA.Mouse"
+    },
+    {
+      "Import": "JornadaRPA.Python"
+    },
+    {
+      "Import": "JornadaRPA.Excel"
+    },
+    {
+      "Import": "JornadaRPA.Keyboard"
+    }
+  ],
+  "PathSelector": "C:\\Jornada RPA Selector 1.0\\JornadaRPA.Selector.exe",
+  "PathRunner": "C:\\",
+  "PathInstalledPython": "C:\\RPA\\Ifood_opcoes_adicionais\\venv\\Scripts\\",
+  "PathPythonVersion": "3.13",
+  "PathPythonBaseVersion": null
+}

@@ -1,0 +1,131 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="JornadaRPA.Bot" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="JornadaRPAStudio.Workflow_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:jea="clr-namespace:JornadaRPA.Excel.As_Dataframe;assembly=JornadaRPA.Excel"
+ xmlns:jer="clr-namespace:JornadaRPA.Excel.Read_Excel;assembly=JornadaRPA.Excel"
+ xmlns:jks="clr-namespace:JornadaRPA.Keyboard.Send_Hotkey;assembly=JornadaRPA.Keyboard"
+ xmlns:jkt="clr-namespace:JornadaRPA.Keyboard.Type_Into;assembly=JornadaRPA.Keyboard"
+ xmlns:jmc="clr-namespace:JornadaRPA.Mouse.Click;assembly=JornadaRPA.Mouse"
+ xmlns:jwe="clr-namespace:JornadaRPA.Web.Execute_Javascript;assembly=JornadaRPA.Web"
+ xmlns:jwf="clr-namespace:JornadaRPA.Web.Find_Element;assembly=JornadaRPA.Web"
+ xmlns:jwf1="clr-namespace:JornadaRPA.Web.Find_And_Click;assembly=JornadaRPA.Web"
+ xmlns:jwm="clr-namespace:JornadaRPA.Web.Maximize_Window;assembly=JornadaRPA.Web"
+ xmlns:jwo="clr-namespace:JornadaRPA.Web.OpenBrowser;assembly=JornadaRPA.Web"
+ xmlns:jww="clr-namespace:JornadaRPA.Web.Wait;assembly=JornadaRPA.Web"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
+    <jer:Read_Excel DisplayName="Read_Excel: Abre planilha de lote iFood" sap2010:WorkflowViewState.IdRef="Read_Excel_4" dataList="listaNoticias" dataType="As_List" file_or_path="&quot;C:\RPA\Ifood_opcoes_adicionais\dados\Tabela_atualizacao_em_lote_limpo_20260226_005534.xlsx&quot;" header="True" instance="excelBot" instanceExcel="True" sheet="&quot;Sheet1&quot;" />
+    <jea:As_Dataframe DisplayName="As_Dataframe: Converte planilha em dataframe" sap2010:WorkflowViewState.IdRef="As_Dataframe_1" dataFrame="dfNoticias" instance="excelBot" sheet="&quot;Sheet1&quot;" />
+    <jwo:OpenBrowser download_folder_path="{x:Null}" user_data_dir="{x:Null}" DisplayName="OpenBrowser: MVC" Headless="False" sap2010:WorkflowViewState.IdRef="OpenBrowser_2" Url="&quot;https://mvc.boxnet.com.br/Autenticacao/Login?ReturnUrl=%2f&quot;" WebDriverPath="''" anonimous="False" arguments="[]" createInstance="True" inBrowser="CHROME" outBrowser="webBot" page_load_strategy="Normal" upWebDriver="True" />
+    <jwm:Maximize_Window sap2010:WorkflowViewState.IdRef="Maximize_Window_1" botInstance="webBot" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_2" InstanceBrowser="webBot" wait_time="5000" />
+    <jwf:Find_Element DisplayName="Find_Element: Usuário MVC" sap2010:WorkflowViewState.IdRef="Find_Element_6" InstanceBrowser="webBot" by="XPATH" ensure_clickable="False" ensure_visible="False" instance_element="campoUserMVC" selector="'//*[@id=&quot;UserName&quot;]'" waiting_time="3000" />
+    <jkt:Type_Into DisplayName="Type_Into: Usuário" sap2010:WorkflowViewState.IdRef="Type_Into_2" click_before="False" convertTo="None" element_instance="campoUserMVC" empty_field="False" interval="0" text="&quot;sergio.franco&quot;" type="Send_Keys" with_spaces="True" />
+    <jwf:Find_Element DisplayName="Find_Element: Senha" sap2010:WorkflowViewState.IdRef="Find_Element_7" InstanceBrowser="webBot" by="XPATH" ensure_clickable="False" ensure_visible="False" instance_element="campoPasswordMVC" selector="'//*[@id=&quot;Password&quot;]'" waiting_time="1000" />
+    <jkt:Type_Into DisplayName="Type_Into: Senha" sap2010:WorkflowViewState.IdRef="Type_Into_3" click_before="False" convertTo="None" element_instance="campoPasswordMVC" empty_field="False" interval="0" text="&quot;@box2026&quot;" type="Send_Keys" with_spaces="True" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: botão de Acessar" sap2010:WorkflowViewState.IdRef="Find_And_Click_1" InstanceBrowser="webBot" button="Left" by="XPATH" clicks="One" ensure_clickable="False" ensure_visible="False" interval_between_clicks="0" selector="&quot;/html/body/div/div/form/div[2]/div/button&quot;" wait_after="300" waiting_time="1000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_4" InstanceBrowser="webBot" wait_time="3000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: Pulldown de MVCs" sap2010:WorkflowViewState.IdRef="Find_And_Click_3" InstanceBrowser="webBot" button="Left" by="XPATH" clicks="One" ensure_clickable="False" ensure_visible="False" interval_between_clicks="0" selector="'//*[@id=&quot;headerTodo&quot;]/div/header/div/ul[2]/li[1]/a/div[2]/span'" wait_after="300" waiting_time="5000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_6" InstanceBrowser="webBot" wait_time="3000" />
+    <jwf:Find_Element DisplayName="Find_Element: campo de Buscar MVC..." sap2010:WorkflowViewState.IdRef="Find_Element_10" InstanceBrowser="webBot" by="ID" ensure_clickable="False" ensure_visible="True" instance_element="campoPesquisaMVC" selector="&quot;txtPesquisarMvc&quot;" waiting_time="5000" />
+    <jkt:Type_Into sap2010:WorkflowViewState.IdRef="Type_Into_7" click_before="False" convertTo="None" element_instance="campoPesquisaMVC" empty_field="False" interval="0" text="&quot;IFOOD - BOXNET&quot;" type="Send_Keys" with_spaces="True" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: Seleciona iFood" sap2010:WorkflowViewState.IdRef="Find_And_Click_4" InstanceBrowser="webBot" button="Left" by="XPATH" clicks="One" ensure_clickable="False" ensure_visible="True" interval_between_clicks="0" selector="&quot;//a[contains(text(), 'IFOOD - BOXNET')]&quot;" wait_after="300" waiting_time="10000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_7" InstanceBrowser="webBot" wait_time="3000" />
+    <jwe:Execute_Javascript DisplayName="Execute_Javascript: Clique no modo Lista" sap2010:WorkflowViewState.IdRef="Execute_Javascript_2" code="&quot;document.getElementById('list-mode').click();&quot;" inBrowser="webBot" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_18" InstanceBrowser="webBot" wait_time="3000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: ID Notícia" sap2010:WorkflowViewState.IdRef="Find_And_Click_5" InstanceBrowser="webBot" button="Left" by="XPATH" clicks="One" ensure_clickable="False" ensure_visible="True" interval_between_clicks="0" selector="'//*[@id=&quot;spIdNoticia&quot;]'" wait_after="300" waiting_time="3000" />
+    <jwf:Find_Element DisplayName="Find_Element: campo de ID Notícia" sap2010:WorkflowViewState.IdRef="Find_Element_11" InstanceBrowser="webBot" by="XPATH" ensure_clickable="True" ensure_visible="True" instance_element="campoBuscaIDnoticias" selector="&quot;//div[@class='k-multiselect-wrap k-floatwrap']//input&quot;" waiting_time="3000" />
+    <jmc:Click DisplayName="Click:  ID Notícia digitada" Element="campoBuscaIDnoticias" sap2010:WorkflowViewState.IdRef="Click_1" button="Left" clicks="One" interval_between_clicks="0" wait_after="300" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_9" InstanceBrowser="webBot" wait_time="500" />
+    <jkt:Type_Into DisplayName="Type_Into: ID da Notícia" sap2010:WorkflowViewState.IdRef="Type_Into_8" click_before="False" convertTo="None" element_instance="campoBuscaIDnoticias" empty_field="False" interval="0" text="&quot;867310911&quot;" type="Send_Keys" with_spaces="True" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_10" InstanceBrowser="webBot" wait_time="500" />
+    <jks:Send_Hotkey DisplayName="Send_Hotkey: Enter para confirmar ID" sap2010:WorkflowViewState.IdRef="Send_Hotkey_1" element_instance="webBot" key="Enter" text="None" wait="0" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_8" InstanceBrowser="webBot" wait_time="500" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: Caixa de Período" sap2010:WorkflowViewState.IdRef="Find_And_Click_6" InstanceBrowser="webBot" button="Left" by="XPATH" clicks="One" ensure_clickable="True" ensure_visible="True" interval_between_clicks="0" selector="&quot;//span[@class='k-input' and text()='Últimas 24 Horas']&quot;" wait_after="300" waiting_time="1000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_11" InstanceBrowser="webBot" wait_time="1000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: Última Semana" sap2010:WorkflowViewState.IdRef="Find_And_Click_7" InstanceBrowser="webBot" button="Left" by="XPATH" clicks="One" ensure_clickable="True" ensure_visible="True" interval_between_clicks="0" selector="&quot;//li[contains(text(), 'Última Semana')]&quot;" wait_after="300" waiting_time="1000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_12" InstanceBrowser="webBot" wait_time="1000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: Refresh da MVC" sap2010:WorkflowViewState.IdRef="Find_And_Click_8" InstanceBrowser="webBot" button="Left" by="ID" clicks="One" ensure_clickable="False" ensure_visible="False" interval_between_clicks="0" selector="&quot;refresh-results&quot;" wait_after="300" waiting_time="1000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_13" InstanceBrowser="webBot" wait_time="3000" />
+    <jwf:Find_Element DisplayName="Find_Element: Seleciona primeira notícia" sap2010:WorkflowViewState.IdRef="Find_Element_14" InstanceBrowser="webBot" by="XPATH" ensure_clickable="True" ensure_visible="True" instance_element="tituloNoticia" selector="&quot;//section[@class='news-content']//h4&quot;" waiting_time="10000" />
+    <jmc:Click Element="tituloNoticia" sap2010:WorkflowViewState.IdRef="Click_3" button="Left" clicks="One" interval_between_clicks="0" wait_after="300" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_16" InstanceBrowser="webBot" wait_time="2000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: OA Menu Direito" sap2010:WorkflowViewState.IdRef="Find_And_Click_10" InstanceBrowser="webBot" button="Left" by="ID" clicks="One" ensure_clickable="False" ensure_visible="False" interval_between_clicks="0" selector="&quot;aditional-options&quot;" wait_after="300" waiting_time="1000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_17" InstanceBrowser="webBot" wait_time="5000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: OA PV iFood - campo" sap2010:WorkflowViewState.IdRef="Find_And_Click_11" InstanceBrowser="webBot" button="Left" by="ID" clicks="One" ensure_clickable="True" ensure_visible="True" interval_between_clicks="0" selector="&quot;aditional-options-2155&quot;" wait_after="300" waiting_time="5000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_24" InstanceBrowser="webBot" wait_time="1000" />
+    <jwe:Execute_Javascript DisplayName="Execute_Javascript: Selecionar PV" sap2010:WorkflowViewState.IdRef="Execute_Javascript_4" code="&quot;&quot;&quot;&#xD;&#xA;// Abordagem mais direta - tenta manipular o select diretamente&#xD;&#xA;setTimeout(function() {&#xD;&#xA;    // Encontrar o select original (que está oculto)&#xD;&#xA;    var selectOriginal = document.querySelector('select[id=&quot;aditional-options-2155-input&quot;]');&#xD;&#xA;    &#xD;&#xA;    if (selectOriginal) {&#xD;&#xA;        // Procurar a opção com o texto desejado&#xD;&#xA;        for(var i = 0; i &lt; selectOriginal.options.length; i++) {&#xD;&#xA;            if(selectOriginal.options[i].text.includes('Adriana Karam')) {&#xD;&#xA;                // Selecionar a opção&#xD;&#xA;                selectOriginal.selectedIndex = i;&#xD;&#xA;                &#xD;&#xA;                // Disparar eventos para atualizar a interface&#xD;&#xA;                var event = new Event('change', { bubbles: true });&#xD;&#xA;                selectOriginal.dispatchEvent(event);&#xD;&#xA;                &#xD;&#xA;                event = new Event('input', { bubbles: true });&#xD;&#xA;                selectOriginal.dispatchEvent(event);&#xD;&#xA;                &#xD;&#xA;                // Tentar atualizar o componente Kendo UI&#xD;&#xA;                if (typeof $(selectOriginal).data('kendoDropDownList') !== 'undefined') {&#xD;&#xA;                    $(selectOriginal).data('kendoDropDownList').value(selectOriginal.options[i].value);&#xD;&#xA;                    $(selectOriginal).data('kendoDropDownList').trigger('change');&#xD;&#xA;                }&#xD;&#xA;                &#xD;&#xA;                console.log('Selecionado: Adriana Karam');&#xD;&#xA;                break;&#xD;&#xA;            }&#xD;&#xA;        }&#xD;&#xA;    } else {&#xD;&#xA;        console.log('Select não encontrado');&#xD;&#xA;    }&#xD;&#xA;}, 1000);&#xD;&#xA;&quot;&quot;&quot;" inBrowser="webBot" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_27" InstanceBrowser="webBot" wait_time="5000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: OA Nota iFood - campo" sap2010:WorkflowViewState.IdRef="Find_And_Click_16" InstanceBrowser="webBot" button="Left" by="ID" clicks="One" ensure_clickable="True" ensure_visible="True" interval_between_clicks="0" selector="&quot;aditional-options-2224&quot;" wait_after="300" waiting_time="5000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_29" InstanceBrowser="webBot" wait_time="1000" />
+    <jwe:Execute_Javascript DisplayName="Execute_Javascript: Selecionar Nota do iFood" sap2010:WorkflowViewState.IdRef="Execute_Javascript_7" code="&quot;&quot;&quot;&#xA;// Abordagem mais direta - tenta manipular o select diretamente&#xA;setTimeout(function() {&#xA;    // Encontrar o select original (que está oculto)&#xA;    var selectOriginal = document.querySelector('select[id=&quot;aditional-options-2224-input&quot;]');&#xA;    &#xA;    if (selectOriginal) {&#xA;        // Procurar a opção com o texto desejado&#xA;        for(var i = 0; i &lt; selectOriginal.options.length; i++) {&#xA;            if(selectOriginal.options[i].text.includes('Sim')) {&#xA;                // Selecionar a opção&#xA;                selectOriginal.selectedIndex = i;&#xA;                &#xA;                // Disparar eventos para atualizar a interface&#xA;                var event = new Event('change', { bubbles: true });&#xA;                selectOriginal.dispatchEvent(event);&#xA;                &#xA;                event = new Event('input', { bubbles: true });&#xA;                selectOriginal.dispatchEvent(event);&#xA;                &#xA;                // Tentar atualizar o componente Kendo UI&#xA;                if (typeof $(selectOriginal).data('kendoDropDownList') !== 'undefined') {&#xA;                    $(selectOriginal).data('kendoDropDownList').value(selectOriginal.options[i].value);&#xA;                    $(selectOriginal).data('kendoDropDownList').trigger('change');&#xA;                }&#xA;                &#xA;                console.log('Selecionado: Sim');&#xA;                break;&#xA;            }&#xA;        }&#xA;    } else {&#xA;        console.log('Select não encontrado');&#xA;    }&#xA;}, 1000);&#xA;&quot;&quot;&quot;" inBrowser="webBot" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_30" InstanceBrowser="webBot" wait_time="3000" />
+    <jwf1:Find_And_Click DisplayName="Find_And_Click: Salvar e Fechar" sap2010:WorkflowViewState.IdRef="Find_And_Click_17" InstanceBrowser="webBot" button="Left" by="XPATH" clicks="One" ensure_clickable="True" ensure_visible="True" interval_between_clicks="0" selector="'//*[@id=&quot;news-details&quot;]/footer/button[2]'" wait_after="300" waiting_time="10000" />
+    <jww:Wait sap2010:WorkflowViewState.IdRef="Wait_31" InstanceBrowser="webBot" wait_time="5000" />
+    <sads:DebugSymbol.Symbol>dydDOlxSUEFcSWZvb2Rfb3Bjb2VzX2FkaWNpb25haXNcQm90LnhhbWwxFANGDgIBARUFFfACAgExFgUWywECATAXBReeAwIBLxgFGGUCAS4ZBRlkAgEtGgUapQICASwbBRuRAgIBKxwFHKMCAgEqHQUdjgICASkeBR7vAgIBKB8FH2QCAScgBSCEAwIBJiEFIWQCASUiBSKtAgIBJCMFI/UBAgEjJAUk7AICASIlBSVkAgEhJgUm4QECASAnBSdlAgEfKAUo1QICAR4pBSnWAgIBHSoFKs0BAgEcKwUrYwIBGywFLJsCAgEaLQUtZAIBGS4FLrYBAgEYLwUvYwIBFzAFMPoCAgEWMQUxZQIBFTIFMugCAgEUMwUzZQIBEzQFNNACAgESNQU1ZQIBETYFNsYCAgEQNwU3nAECAQ84BThlAgEOOQU51AICAQ06BTplAgEMOwU72wICAQs8BTxlAgEKPQU9qg8CAQk+BT5lAgEIPwU/3QICAQdABUBlAgEGQQVB9w0CAQVCBUJlAgEEQwVD7QICAQNEBURlAgEC</sads:DebugSymbol.Symbol>
+  </Sequence>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="Read_Excel_4" sap:VirtualizedContainerService.HintSize="340.8,193.6" />
+      <sap2010:ViewStateData Id="As_Dataframe_1" sap:VirtualizedContainerService.HintSize="340.8,193.6" />
+      <sap2010:ViewStateData Id="OpenBrowser_2" sap:VirtualizedContainerService.HintSize="340.8,195.2" />
+      <sap2010:ViewStateData Id="Maximize_Window_1" sap:VirtualizedContainerService.HintSize="340.8,92" />
+      <sap2010:ViewStateData Id="Wait_2" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_Element_6" sap:VirtualizedContainerService.HintSize="340.8,178.4" />
+      <sap2010:ViewStateData Id="Type_Into_2" sap:VirtualizedContainerService.HintSize="340.8,125.6" />
+      <sap2010:ViewStateData Id="Find_Element_7" sap:VirtualizedContainerService.HintSize="340.8,178.4" />
+      <sap2010:ViewStateData Id="Type_Into_3" sap:VirtualizedContainerService.HintSize="340.8,125.6" />
+      <sap2010:ViewStateData Id="Find_And_Click_1" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_4" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_3" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_6" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_Element_10" sap:VirtualizedContainerService.HintSize="340.8,178.4" />
+      <sap2010:ViewStateData Id="Type_Into_7" sap:VirtualizedContainerService.HintSize="340.8,125.6" />
+      <sap2010:ViewStateData Id="Find_And_Click_4" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_7" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Execute_Javascript_2" sap:VirtualizedContainerService.HintSize="340.8,148.8" />
+      <sap2010:ViewStateData Id="Wait_18" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_5" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Find_Element_11" sap:VirtualizedContainerService.HintSize="340.8,178.4" />
+      <sap2010:ViewStateData Id="Click_1" sap:VirtualizedContainerService.HintSize="340.8,82.4" />
+      <sap2010:ViewStateData Id="Wait_9" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Type_Into_8" sap:VirtualizedContainerService.HintSize="340.8,125.6" />
+      <sap2010:ViewStateData Id="Wait_10" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Send_Hotkey_1" sap:VirtualizedContainerService.HintSize="340.8,164" />
+      <sap2010:ViewStateData Id="Wait_8" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_6" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_11" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_7" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_12" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_8" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_13" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_Element_14" sap:VirtualizedContainerService.HintSize="340.8,178.4" />
+      <sap2010:ViewStateData Id="Click_3" sap:VirtualizedContainerService.HintSize="340.8,82.4" />
+      <sap2010:ViewStateData Id="Wait_16" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_10" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_17" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_11" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_24" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Execute_Javascript_4" sap:VirtualizedContainerService.HintSize="340.8,151.2" />
+      <sap2010:ViewStateData Id="Wait_27" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_16" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_29" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Execute_Javascript_7" sap:VirtualizedContainerService.HintSize="340.8,151.2" />
+      <sap2010:ViewStateData Id="Wait_30" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Find_And_Click_17" sap:VirtualizedContainerService.HintSize="340.8,142.4" />
+      <sap2010:ViewStateData Id="Wait_31" sap:VirtualizedContainerService.HintSize="340.8,96.8" />
+      <sap2010:ViewStateData Id="Sequence_3" sap:VirtualizedContainerService.HintSize="363.2,8162.4">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="JornadaRPAStudio.Workflow_1" sap:VirtualizedContainerService.HintSize="403.2,7834.4" />
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+</Activity>

@@ -1,0 +1,8 @@
+streamlit==1.33.0
+pandas==2.2.2
+openpyxl==3.1.2
+pytz==2024.1
+psutil==5.9.8
+botcity-framework-web==1.0.3
+botcity-excel-plugin==0.1.7
+selenium==4.20.0
