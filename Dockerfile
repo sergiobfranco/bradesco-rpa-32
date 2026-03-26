@@ -33,6 +33,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Código da aplicação ────────────────────────────────────────────────────
 COPY bot_streamlit.py .
+COPY db.py .
 COPY config/ config/
 
 # ── Script de inicialização ────────────────────────────────────────────────

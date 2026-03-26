@@ -10,6 +10,8 @@ from datetime import datetime
 from botcity.web.browsers.chrome import default_options
 from botcity.web import *
 from botcity.plugins.excel import *
+from db import init_db, gravar_progresso, ler_progresso
+init_db()
 
 # ─────────────────────────────────────────────
 # Carrega o dicionário de campos a partir do JSON externo
@@ -514,7 +516,8 @@ if (selectOriginal) {{
             '//*[@id="news-details"]/footer/button[2]',
             By.XPATH, 10000, ensure_visible=True, ensure_clickable=True)
         webBot.wait(5000)
-
+        gravar_progresso(usuario, id_noticia, titulo)
+        log(f"  💾 [{timestamp_sp()}] | ID: {id_noticia} | Progresso salvo.")
     encerrar_sessao(webBot)
 
     elapsed = time.time() - start_time
@@ -574,3 +577,26 @@ if uploaded_file is not None:
                 f"🏁 Processamento concluído! "
                 f"Tempo total: **{minutos} min {segundos} s**"
             )
+
+# ── Tabela de progresso ───────────────────────────────────────────
+st.markdown("---")
+st.subheader("📊 Progresso por Operador")
+
+registros = ler_progresso()
+if registros:
+    import pandas as pd
+    import io
+    df_prog = pd.DataFrame(registros, columns=["usuario", "ultimo_id", "ultimo_titulo", "atualizado_em"])
+    df_prog.columns = ["Operador", "Último ID", "Último Título", "Atualizado em"]
+    st.dataframe(df_prog, use_container_width=True)
+
+    buffer = io.BytesIO()
+    df_prog.to_excel(buffer, index=False)
+    st.download_button(
+        label="⬇️ Baixar tabela em XLSX",
+        data=buffer.getvalue(),
+        file_name="progresso_operadores.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+else:
+    st.info("Nenhum registro de progresso ainda.")            

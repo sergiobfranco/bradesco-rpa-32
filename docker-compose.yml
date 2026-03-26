@@ -1,15 +1,17 @@
 services:
-  ifood-rpa:
+  bradesco-rpa-32:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ifood-rpa
+    container_name: bradesco-rpa-32
     ports:
       - "8581:8581"
     volumes:
       # Persiste o cache do ChromeDriver entre reinicializações
       - chromedriver-cache:/root/.wdm
+      - rpa-data:/app/data
     restart: unless-stopped
 
 volumes:
   chromedriver-cache:
+  rpa-data:
