@@ -5,9 +5,9 @@ set -e
 Xvfb :99 -screen 0 1280x1024x24 -ac &
 sleep 1
 
-# Inicia o Streamlit na porta 8571
+# Inicia o Streamlit na porta 8581
 exec streamlit run bot_streamlit.py \
-    --server.port=8571 \
+    --server.port=8581 \
     --server.address=0.0.0.0 \
     --server.headless=true \
     --browser.gatherUsageStats=false

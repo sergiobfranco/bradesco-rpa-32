@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: ifood-rpa
     ports:
-      - "8571:8571"
+      - "8581:8581"
     volumes:
       # Persiste o cache do ChromeDriver entre reinicializações
       - chromedriver-cache:/root/.wdm

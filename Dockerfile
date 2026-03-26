@@ -40,6 +40,6 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # ── Porta do Streamlit ─────────────────────────────────────────────────────
-EXPOSE 8571
+EXPOSE 8581
 
 ENTRYPOINT ["/entrypoint.sh"]
