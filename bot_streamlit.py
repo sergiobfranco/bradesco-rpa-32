@@ -469,6 +469,9 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
                 continue
 
             valor_campo = str(valor_raw).strip()
+            if valor_campo.isdigit():
+                valor_campo = valor_campo.zfill(2)
+                
             id_input    = id_elemento + '-input'
             valor_js    = json.dumps(valor_campo)
 
