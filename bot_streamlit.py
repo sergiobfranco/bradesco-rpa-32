@@ -349,7 +349,7 @@ def iniciar_sessao(usuario: str, senha: str) -> WebBot:
     except Exception:
         pass
     webBot.wait(500)
-    
+
     webBot.driver.execute_script("if(document.body) document.body.style.zoom='80%'")
     webBot.wait(500)
 
@@ -470,7 +470,22 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
 
         webBot.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", tituloNoticia)
         webBot.wait(200)
-        tituloNoticia.click()
+
+        # Fecha modal divEdicao se estiver aberto
+        webBot.driver.execute_script("""
+            var modal = document.getElementById('divEdicao');
+            if (modal && modal.style.display !== 'none') {
+                modal.style.display = 'none';
+            }
+        """)
+        webBot.wait(300)
+        descartar_alerta(webBot)
+
+        try:
+            tituloNoticia.click()
+        except Exception:
+            webBot.driver.execute_script("arguments[0].click();", tituloNoticia)
+
         webBot.wait(2000)
 
         descartar_alerta(webBot)
