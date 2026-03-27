@@ -468,10 +468,11 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
             if pd.isna(valor_raw) or str(valor_raw).strip() == '':
                 continue
 
-            valor_campo = str(valor_raw).strip()
-            if valor_campo.isdigit():
-                valor_campo = valor_campo.zfill(2)
-                
+            try:
+                valor_campo = str(int(float(str(valor_raw)))).zfill(2)
+            except (ValueError, TypeError):
+                valor_campo = str(valor_raw).strip()
+
             id_input    = id_elemento + '-input'
             valor_js    = json.dumps(valor_campo)
 
