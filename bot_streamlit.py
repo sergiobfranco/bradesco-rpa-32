@@ -11,6 +11,9 @@ from botcity.web.browsers.chrome import default_options
 from botcity.web import *
 from botcity.plugins.excel import *
 from db import init_db, gravar_progresso, ler_progresso, gravar_erro, ler_erros
+import threading
+import queue
+import io
 init_db()
 
 # ─────────────────────────────────────────────
@@ -383,12 +386,10 @@ def iniciar_sessao(usuario: str, senha: str) -> WebBot:
     return webBot
 
 
-def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: dict):
-    logs = []
+def run_bot(df: pd.DataFrame, log_queue: queue.Queue, usuario: str, senha: str, campo_id_map: dict, resultado: dict):
 
     def log(msg: str):
-        logs.append(msg)
-        log_box.text('\n'.join(logs))
+        log_queue.put(msg)
 
     start_time = time.time()
     #REINICIAR_A_CADA = 50
@@ -566,13 +567,19 @@ if (selectOriginal) {{
         log(f"  💾 [{timestamp_sp()}] | ID: {id_noticia} | Progresso salvo.")
     encerrar_sessao(webBot)
 
-    elapsed = time.time() - start_time
-    return elapsed
+    resultado['elapsed'] = time.time() - start_time
+    log_queue.put(None)  # sentinela — sinaliza conclusão
 
 
 # ══════════════════════════════════════════════════════════════════════════
 # INTERFACE STREAMLIT
 # ══════════════════════════════════════════════════════════════════════════
+# ── Estado da sessão ──────────────────────────────────────────────
+if 'running'    not in st.session_state: st.session_state.running   = False
+if 'logs'       not in st.session_state: st.session_state.logs      = []
+if 'log_queue'  not in st.session_state: st.session_state.log_queue = None
+if 'thread'     not in st.session_state: st.session_state.thread    = None
+if 'resultado'  not in st.session_state: st.session_state.resultado = {}
 
 st.set_page_config(page_title="RPA Bradesco (MVC=32)", page_icon="🤖", layout="centered")
 st.title("🤖 RPA Bradesco (MVC=32) — Atualização em Lote")
@@ -608,21 +615,60 @@ if uploaded_file is not None:
     if not usuario or not senha:
         st.warning("⚠️ Preencha o usuário e a senha antes de iniciar.")
     else:
-        if st.button("▶ Iniciar Processamento", type="primary"):
-            campo_id_map = carregar_campo_id_map()
+        if st.button("▶ Iniciar Processamento", type="primary",
+                            disabled=st.session_state.running):
+                    campo_id_map = carregar_campo_id_map()
+                    st.session_state.logs      = []
+                    st.session_state.log_queue = queue.Queue()
+                    st.session_state.resultado = {}
+                    st.session_state.running   = True
 
-            st.markdown("### 📋 Log de Processamento")
-            log_box = st.empty()
+                    t = threading.Thread(
+                        target=run_bot,
+                        args=(df, st.session_state.log_queue, usuario, senha,
+                            campo_id_map, st.session_state.resultado),
+                        daemon=True
+                    )
+                    st.session_state.thread = t
+                    t.start()
 
-            with st.spinner("Processando... aguarde."):
-                elapsed = run_bot(df, log_box, usuario, senha, campo_id_map)
+            if st.session_state.running:
+                st.markdown("### 📋 Log de Processamento")
+                log_box = st.empty()
 
-            minutos = int(elapsed // 60)
-            segundos = int(elapsed % 60)
-            st.success(
-                f"🏁 Processamento concluído! "
-                f"Tempo total: **{minutos} min {segundos} s**"
-            )
+                with st.spinner("Processando... aguarde."):
+                    while st.session_state.thread and st.session_state.thread.is_alive():
+                        try:
+                            while True:
+                                msg = st.session_state.log_queue.get_nowait()
+                                if msg is None:
+                                    break
+                                st.session_state.logs.append(msg)
+                        except queue.Empty:
+                            pass
+                        log_box.text('\n'.join(st.session_state.logs[-200:]))
+                        time.sleep(0.5)
+
+                # Drena mensagens finais
+                try:
+                    while True:
+                        msg = st.session_state.log_queue.get_nowait()
+                        if msg is not None:
+                            st.session_state.logs.append(msg)
+                        else:
+                            break
+                except queue.Empty:
+                    pass
+                log_box.text('\n'.join(st.session_state.logs[-200:]))
+
+                st.session_state.running = False
+                elapsed  = st.session_state.resultado.get('elapsed', 0)
+                minutos  = int(elapsed // 60)
+                segundos = int(elapsed % 60)
+                st.success(
+                    f"🏁 Processamento concluído! "
+                    f"Tempo total: **{minutos} min {segundos} s**"
+                )
 
 # ── Tabela de progresso ───────────────────────────────────────────
 st.markdown("---")
