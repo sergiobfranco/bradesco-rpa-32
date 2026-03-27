@@ -10,7 +10,7 @@ from datetime import datetime
 from botcity.web.browsers.chrome import default_options
 from botcity.web import *
 from botcity.plugins.excel import *
-from db import init_db, gravar_progresso, ler_progresso
+from db import init_db, gravar_progresso, ler_progresso, gravar_erro, ler_erros
 init_db()
 
 # ─────────────────────────────────────────────
@@ -314,9 +314,16 @@ def iniciar_sessao(usuario: str, senha: str) -> WebBot:
     # Usamos argumentos diretos em vez de experimental_option/prefs pois o
     # default_options() do BotCity pode sobrescrever as prefs.
     webBotDef_options.add_argument("--disable-save-password-bubble")
-    webBotDef_options.add_argument("--disable-features=PasswordManager")
+    webBotDef_options.add_argument("--disable-features=PasswordManager,AutofillServerCommunication")
     webBotDef_options.add_argument("--password-store=basic")
     webBotDef_options.add_argument("--use-mock-keychain")
+    webBotDef_options.add_experimental_option("prefs", {
+    "credentials_enable_service": False,
+    "profile.password_manager_enabled": False,
+    "profile.password_manager_leak_detection": False,
+    "autofill.profile_enabled": False,
+    })
+    webBotDef_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
     webBot.options = webBotDef_options
     webBot.browse("https://mvc.boxnet.com.br/Autenticacao/Login?ReturnUrl=%2f")
@@ -336,6 +343,13 @@ def iniciar_sessao(usuario: str, senha: str) -> WebBot:
 
     safe_click(webBot, "/html/body/div/div/form/div[2]/div/button", By.XPATH, 1000)
     webBot.wait(2000)
+    # Fecha popup de salvar senha se aparecer
+    try:
+        webBot.driver.find_element(By.TAG_NAME, 'body').send_keys('\ue00c')
+    except Exception:
+        pass
+    webBot.wait(500)
+    
     webBot.driver.execute_script("if(document.body) document.body.style.zoom='80%'")
     webBot.wait(500)
 
@@ -413,6 +427,7 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
 
         if campoBuscaIDnoticias is None:
             log(f"  ❌ [{timestamp_sp()}] | ID: {id_noticia} | Campo de ID não abriu — pulando.")
+            gravar_erro(usuario, id_noticia, titulo, "Campo de ID não abriu")
             continue
 
         try:
@@ -426,6 +441,7 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
         campoBuscaIDnoticias = buscar_campo_id_noticias(webBot)
         if campoBuscaIDnoticias is None:
             log(f"  ❌ [{timestamp_sp()}] | ID: {id_noticia} | Campo perdido após foco — pulando.")
+            gravar_erro(usuario, id_noticia, titulo, "Campo perdido após foco")
             continue
 
         campoBuscaIDnoticias.send_keys(id_noticia)
@@ -436,6 +452,7 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
         selecionou = selecionar_periodo_ultimo_ano(webBot, log, id_noticia)
         if not selecionou:
             log(f"  ❌ [{timestamp_sp()}] | ID: {id_noticia} | Não foi possível selecionar 'Último ano' — pulando.")
+            gravar_erro(usuario, id_noticia, titulo, "Não foi possível selecionar 'Último ano'")
             continue
         webBot.wait(500)
 
@@ -448,6 +465,7 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
 
         if tituloNoticia is None:
             log(f"  ❌ [{timestamp_sp()}] | ID: {id_noticia} | Notícia não encontrada na listagem — pulando.")
+            gravar_erro(usuario, id_noticia, titulo, "Notícia não encontrada na listagem")
             continue
 
         webBot.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", tituloNoticia)
@@ -511,6 +529,7 @@ if (selectOriginal) {{
         descartar_alerta(webBot)
         selecionou_liberada = selecionar_liberada_para_mvc(webBot, log, id_noticia)
         if not selecionou_liberada:
+            gravar_erro(usuario, id_noticia, titulo, "Não foi possível selecionar 'Liberada para MVC'")
             recuperar_estado(webBot, log, id_noticia)
             continue
 
@@ -603,4 +622,25 @@ if registros:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 else:
-    st.info("Nenhum registro de progresso ainda.")            
+    st.info("Nenhum registro de progresso ainda.")     
+
+# ── Tabela de erros ───────────────────────────────────────────────
+st.markdown("---")
+st.subheader("❌ Registros com Erro")
+
+erros = ler_erros()
+if erros:
+    df_erros = pd.DataFrame(erros)
+    df_erros.columns = ["Operador", "ID Notícia", "Título", "Motivo", "Ocorrido em"]
+    st.dataframe(df_erros, use_container_width=True)
+
+    buffer_erros = io.BytesIO()
+    df_erros.to_excel(buffer_erros, index=False)
+    st.download_button(
+        label="⬇️ Baixar erros em XLSX",
+        data=buffer_erros.getvalue(),
+        file_name="erros_processamento.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+else:
+    st.info("Nenhum erro registrado.")           

@@ -38,3 +38,61 @@ def ler_progresso():
             "SELECT usuario, ultimo_id, ultimo_titulo, atualizado_em FROM progresso ORDER BY atualizado_em DESC"
         ).fetchall()
     return [dict(r) for r in rows]
+
+def gravar_erro(usuario: str, id_noticia: str, titulo: str, motivo: str):
+    init_db()
+    agora = datetime.now(TZ_SP).strftime('%Y-%m-%d %H:%M:%S')
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS erros (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario        TEXT,
+                id_noticia     TEXT,
+                titulo         TEXT,
+                motivo_erro    TEXT,
+                ocorrido_em    TEXT,
+                UNIQUE(usuario, id_noticia)
+            )
+        """)
+        # Grava por cima se mesmo operador + mesmo ID
+        conn.execute("""
+            INSERT INTO erros (usuario, id_noticia, titulo, motivo_erro, ocorrido_em)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(usuario, id_noticia) DO UPDATE SET
+                titulo      = excluded.titulo,
+                motivo_erro = excluded.motivo_erro,
+                ocorrido_em = excluded.ocorrido_em
+        """, (usuario, id_noticia, titulo, motivo, agora))
+
+        # Mantém no máximo 100 linhas — descarta as mais antigas do mesmo operador
+        conn.execute("""
+            DELETE FROM erros
+            WHERE usuario = ?
+              AND id NOT IN (
+                SELECT id FROM erros
+                WHERE usuario = ?
+                ORDER BY ocorrido_em DESC
+                LIMIT 100
+              )
+        """, (usuario, usuario))
+
+
+def ler_erros():
+    init_db()
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS erros (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario        TEXT,
+                id_noticia     TEXT,
+                titulo         TEXT,
+                motivo_erro    TEXT,
+                ocorrido_em    TEXT,
+                UNIQUE(usuario, id_noticia)
+            )
+        """)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT usuario, id_noticia, titulo, motivo_erro, ocorrido_em FROM erros ORDER BY ocorrido_em DESC"
+        ).fetchall()
+    return [dict(r) for r in rows]    
