@@ -289,6 +289,11 @@ def iniciar_sessao(usuario: str, senha: str) -> WebBot:
     """
     Inicia o Chromium em modo headless usando o binário instalado via apt.
     """
+    import tempfile
+    perfil_temp = tempfile.mkdtemp()
+    webBotDef_options.add_argument(f"--user-data-dir={perfil_temp}")
+    webBotDef_options.add_argument("--profile-directory=Default")
+    
     webBot = WebBot()
     webBot.driver_path = CHROMEDRIVER_PATH
     webBot.browser = Browser.CHROME
