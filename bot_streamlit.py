@@ -385,7 +385,7 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
         log_box.text('\n'.join(logs))
 
     start_time = time.time()
-    REINICIAR_A_CADA = 20
+    REINICIAR_A_CADA = 50
 
     # Cada usuário inicia sua própria sessão isolada — sem limpeza global
     webBot = iniciar_sessao(usuario, senha)
@@ -393,10 +393,12 @@ def run_bot(df: pd.DataFrame, log_box, usuario: str, senha: str, campo_id_map: d
     for idx, row in df.iterrows():
 
         if idx > 0 and idx % REINICIAR_A_CADA == 0:
-            log(f"  🔄 [{timestamp_sp()}] | Reiniciando sessão do Chrome ({idx} registros processados)...")
+            import random
+            delay = random.randint(5, 30)
+            log(f"  🔄 [{timestamp_sp()}] | Reiniciando sessão do Chrome em {delay}s...")
+            time.sleep(delay)
             encerrar_sessao(webBot)
             webBot = iniciar_sessao(usuario, senha)
-            log(f"  ✅ [{timestamp_sp()}] | Sessão reiniciada — continuando.")
 
         # Localiza a coluna de ID de forma case-insensitive
         col_id = next((c for c in df.columns if c.strip().lower() == 'id'), None)
