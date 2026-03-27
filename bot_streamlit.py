@@ -616,59 +616,59 @@ if uploaded_file is not None:
         st.warning("⚠️ Preencha o usuário e a senha antes de iniciar.")
     else:
         if st.button("▶ Iniciar Processamento", type="primary",
-                            disabled=st.session_state.running):
-                    campo_id_map = carregar_campo_id_map()
-                    st.session_state.logs      = []
-                    st.session_state.log_queue = queue.Queue()
-                    st.session_state.resultado = {}
-                    st.session_state.running   = True
+                    disabled=st.session_state.running):
+            campo_id_map = carregar_campo_id_map()
+            st.session_state.logs      = []
+            st.session_state.log_queue = queue.Queue()
+            st.session_state.resultado = {}
+            st.session_state.running   = True
 
-                    t = threading.Thread(
-                        target=run_bot,
-                        args=(df, st.session_state.log_queue, usuario, senha,
-                            campo_id_map, st.session_state.resultado),
-                        daemon=True
-                    )
-                    st.session_state.thread = t
-                    t.start()
+            t = threading.Thread(
+                target=run_bot,
+                args=(df, st.session_state.log_queue, usuario, senha,
+                    campo_id_map, st.session_state.resultado),
+                daemon=True
+            )
+            st.session_state.thread = t
+            t.start()
 
-            if st.session_state.running:
-                st.markdown("### 📋 Log de Processamento")
-                log_box = st.empty()
+    if st.session_state.running:
+        st.markdown("### 📋 Log de Processamento")
+        log_box = st.empty()
 
-                with st.spinner("Processando... aguarde."):
-                    while st.session_state.thread and st.session_state.thread.is_alive():
-                        try:
-                            while True:
-                                msg = st.session_state.log_queue.get_nowait()
-                                if msg is None:
-                                    break
-                                st.session_state.logs.append(msg)
-                        except queue.Empty:
-                            pass
-                        log_box.text('\n'.join(st.session_state.logs[-200:]))
-                        time.sleep(0.5)
-
-                # Drena mensagens finais
+        with st.spinner("Processando... aguarde."):
+            while st.session_state.thread and st.session_state.thread.is_alive():
                 try:
                     while True:
                         msg = st.session_state.log_queue.get_nowait()
-                        if msg is not None:
-                            st.session_state.logs.append(msg)
-                        else:
+                        if msg is None:
                             break
+                        st.session_state.logs.append(msg)
                 except queue.Empty:
                     pass
                 log_box.text('\n'.join(st.session_state.logs[-200:]))
+                time.sleep(0.5)
 
-                st.session_state.running = False
-                elapsed  = st.session_state.resultado.get('elapsed', 0)
-                minutos  = int(elapsed // 60)
-                segundos = int(elapsed % 60)
-                st.success(
-                    f"🏁 Processamento concluído! "
-                    f"Tempo total: **{minutos} min {segundos} s**"
-                )
+        # Drena mensagens finais
+        try:
+            while True:
+                msg = st.session_state.log_queue.get_nowait()
+                if msg is not None:
+                    st.session_state.logs.append(msg)
+                else:
+                    break
+        except queue.Empty:
+            pass
+        log_box.text('\n'.join(st.session_state.logs[-200:]))
+
+        st.session_state.running = False
+        elapsed  = st.session_state.resultado.get('elapsed', 0)
+        minutos  = int(elapsed // 60)
+        segundos = int(elapsed % 60)
+        st.success(
+            f"🏁 Processamento concluído! "
+            f"Tempo total: **{minutos} min {segundos} s**"
+        )
 
 # ── Tabela de progresso ───────────────────────────────────────────
 st.markdown("---")
