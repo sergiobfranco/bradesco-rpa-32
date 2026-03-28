@@ -96,3 +96,13 @@ def ler_erros():
             "SELECT usuario, id_noticia, titulo, motivo_erro, ocorrido_em FROM erros ORDER BY ocorrido_em DESC"
         ).fetchall()
     return [dict(r) for r in rows]    
+
+def get_ultimo_progresso(usuario: str):
+    init_db()
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT ultimo_id, ultimo_titulo, atualizado_em FROM progresso WHERE usuario = ?",
+            (usuario,)
+        ).fetchone()
+    return dict(row) if row else None

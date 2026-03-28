@@ -10,7 +10,7 @@ from datetime import datetime
 from botcity.web.browsers.chrome import default_options
 from botcity.web import *
 from botcity.plugins.excel import *
-from db import init_db, gravar_progresso, ler_progresso, gravar_erro, ler_erros
+from db import init_db, gravar_progresso, ler_progresso, gravar_erro, ler_erros, get_ultimo_progresso
 import threading
 import queue
 import io
@@ -385,6 +385,31 @@ def iniciar_sessao(usuario: str, senha: str) -> WebBot:
 
     return webBot
 
+def get_df_a_partir_do_ultimo(df: pd.DataFrame, usuario: str) -> pd.DataFrame:
+    """Retorna o slice do df a partir do registro seguinte ao último processado."""
+    ultimo = get_ultimo_progresso(usuario)
+    if ultimo is None:
+        return df  # nunca processou nada, começa do início
+
+    col_id = next((c for c in df.columns if c.strip().lower() == 'id'), None)
+    if col_id is None:
+        return df
+
+    ultimo_id = str(ultimo['ultimo_id'])
+
+    def normalizar_id(val):
+        try:
+            return str(int(float(str(val))))
+        except Exception:
+            return str(val).strip()
+
+    mask    = df[col_id].apply(normalizar_id) == ultimo_id
+    indices = df[mask].index.tolist()
+
+    if not indices:
+        return df  # ID não encontrado, começa do início
+
+    return df.loc[indices[-1] + 1:]
 
 def run_bot(df: pd.DataFrame, log_queue: queue.Queue, usuario: str, senha: str, campo_id_map: dict, resultado: dict):
 
@@ -567,9 +592,55 @@ if (selectOriginal) {{
         log(f"  💾 [{timestamp_sp()}] | ID: {id_noticia} | Progresso salvo.")
     encerrar_sessao(webBot)
 
-    resultado['elapsed'] = time.time() - start_time
+    resultado['elapsed']  = time.time() - start_time
+    resultado['concluido'] = True
     log_queue.put(None)  # sentinela — sinaliza conclusão
 
+def run_bot_with_retry(df: pd.DataFrame, log_queue: queue.Queue,
+                       usuario: str, senha: str, campo_id_map: dict,
+                       resultado: dict):
+    """
+    Executa run_bot e, se ele morrer de forma anormal,
+    aguarda 5 minutos e retoma a partir do último ID salvo.
+    """
+    ESPERA_RETOMADA = 300  # 5 minutos
+    MAX_TENTATIVAS  = 20
+    resultado['start_time'] = time.time()
+
+    for tentativa in range(1, MAX_TENTATIVAS + 1):
+        df_fatia = get_df_a_partir_do_ultimo(df, usuario)
+
+        if df_fatia.empty:
+            log_queue.put(f"  ✅ [{timestamp_sp()}] | Todos os registros já foram processados.")
+            resultado['elapsed']   = time.time() - resultado['start_time']
+            resultado['concluido'] = True
+            log_queue.put(None)
+            return
+
+        if tentativa > 1:
+            log_queue.put(
+                f"  🔁 [{timestamp_sp()}] | Tentativa {tentativa} — retomando a partir do ID seguinte ao último salvo."
+            )
+
+        try:
+            run_bot(df_fatia, log_queue, usuario, senha, campo_id_map, resultado)
+        except Exception as e:
+            log_queue.put(f"  ❌ [{timestamp_sp()}] | Erro inesperado: {e}")
+
+        if resultado.get('concluido'):
+            return
+
+        if tentativa < MAX_TENTATIVAS:
+            log_queue.put(
+                f"  ⏳ [{timestamp_sp()}] | Processamento interrompido. "
+                f"Retomando em {ESPERA_RETOMADA // 60} minutos... "
+                f"(tentativa {tentativa}/{MAX_TENTATIVAS})"
+            )
+            time.sleep(ESPERA_RETOMADA)
+
+    log_queue.put(f"  ❌ [{timestamp_sp()}] | Máximo de tentativas atingido. Encerrando.")
+    resultado['elapsed'] = time.time() - resultado['start_time']
+    log_queue.put(None)
 
 # ══════════════════════════════════════════════════════════════════════════
 # INTERFACE STREAMLIT
@@ -624,9 +695,9 @@ if uploaded_file is not None:
             st.session_state.running   = True
 
             t = threading.Thread(
-                target=run_bot,
+                target=run_bot_with_retry,
                 args=(df, st.session_state.log_queue, usuario, senha,
-                    campo_id_map, st.session_state.resultado),
+                      campo_id_map, st.session_state.resultado),
                 daemon=True
             )
             st.session_state.thread = t
