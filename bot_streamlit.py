@@ -753,20 +753,6 @@ if uploaded_file is not None:
                         st.success(
                             f"✅ Agendado para {dt_agendado.strftime('%d/%m/%Y às %H:%M')} (horário de SP)")
                             
-            campo_id_map = carregar_campo_id_map()
-            st.session_state.logs      = []
-            st.session_state.log_queue = queue.Queue()
-            st.session_state.resultado = {}
-            st.session_state.running   = True
-
-            t = threading.Thread(
-                target=run_bot_with_retry,
-                args=(df, st.session_state.log_queue, usuario, senha,
-                      campo_id_map, st.session_state.resultado),
-                daemon=True
-            )
-            st.session_state.thread = t
-            t.start()
     if st.session_state.aguardando and not st.session_state.running:
         dt = st.session_state.agendado_em
         st.info(f"⏳ Processamento agendado para **{dt.strftime('%d/%m/%Y às %H:%M')}** (horário de SP). Aguardando...")
