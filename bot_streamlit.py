@@ -760,9 +760,16 @@ if uploaded_file is not None:
             with st.expander("🕐 Agendar início"):
                 data_agendada = st.date_input(
                     "Data", value=datetime.now(TZ_SP).date())
-                hora_agendada = st.time_input(
-                    "Hora (horário de SP)", value=datetime.now(TZ_SP).replace(
-                        second=0, microsecond=0).time())
+                agora_sp = datetime.now(TZ_SP)
+                col_h, col_m = st.columns(2)
+                with col_h:
+                    hora_h = st.number_input("Hora", min_value=0, max_value=23,
+                                            value=agora_sp.hour, step=1)
+                with col_m:
+                    hora_m = st.number_input("Minuto", min_value=0, max_value=59,
+                                            value=agora_sp.minute, step=1)
+                import datetime as dt_module
+                hora_agendada = dt_module.time(hora_h, hora_m)
 
                 if st.button("📅 Confirmar Agendamento",
                             disabled=st.session_state.running or st.session_state.aguardando):
