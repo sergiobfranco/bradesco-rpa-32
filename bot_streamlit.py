@@ -10,7 +10,7 @@ from datetime import datetime
 from botcity.web.browsers.chrome import default_options
 from botcity.web import *
 from botcity.plugins.excel import *
-from db import init_db, gravar_progresso, ler_progresso, gravar_erro, ler_erros, get_ultimo_progresso
+from db import init_db, gravar_progresso, ler_progresso, gravar_erro, ler_erros, get_ultimo_progresso, remover_erro
 import threading
 import queue
 import io
@@ -28,6 +28,16 @@ def carregar_campo_id_map() -> dict:
         st.stop()
     with open(CONFIG_PATH, encoding="utf-8") as f:
         return json.load(f)
+
+CONFIG_APP_PATH = Path(__file__).parent / "config" / "config.json"
+
+def carregar_config_app() -> dict:
+    if not CONFIG_APP_PATH.exists():
+        return {"titulo_tela": "RPA — Atualização em Lote"}
+    with open(CONFIG_APP_PATH, encoding="utf-8") as f:
+        return json.load(f)
+
+CONFIG_APP = carregar_config_app()
 
 TZ_SP = pytz.timezone('America/Sao_Paulo')
 
@@ -422,7 +432,19 @@ def run_bot(df: pd.DataFrame, log_queue: queue.Queue, usuario: str, senha: str, 
     # Cada usuário inicia sua própria sessão isolada — sem limpeza global
     webBot = iniciar_sessao(usuario, senha)
 
+    seq = 0
     for idx, row in df.iterrows():
+        seq += 1
+        # ── Pausa na virada da meia-noite ─────────────────────────────────
+        agora_sp = datetime.now(TZ_SP)
+        if agora_sp.hour == 23 and agora_sp.minute >= 58:
+            log(f"  ⏸️  [{timestamp_sp()}] | Pausando para virada do dia — retomando às 00:01h...")
+            while True:
+                agora_sp = datetime.now(TZ_SP)
+                if agora_sp.hour == 0 and agora_sp.minute >= 1:
+                    break
+                time.sleep(10)
+            log(f"  ▶️  [{timestamp_sp()}] | Retomando processamento após virada do dia.")
 
         #if idx > 0 and idx % REINICIAR_A_CADA == 0:
         #    import random
@@ -440,7 +462,7 @@ def run_bot(df: pd.DataFrame, log_queue: queue.Queue, usuario: str, senha: str, 
         id_noticia = str(int(row[col_id]))
         titulo     = row['Titulo']
 
-        log(f"[{timestamp_sp()}] | ID: {id_noticia} | Título: {titulo}")
+        log(f"[{timestamp_sp()}] | #{seq} | ID: {id_noticia} | Título: {titulo}")
 
         descartar_alerta(webBot)
 
@@ -589,6 +611,7 @@ if (selectOriginal) {{
             By.XPATH, 10000, ensure_visible=True, ensure_clickable=True)
         webBot.wait(5000)
         gravar_progresso(usuario, id_noticia, titulo)
+        remover_erro(usuario, id_noticia)   # ← adicionar esta linha
         log(f"  💾 [{timestamp_sp()}] | ID: {id_noticia} | Progresso salvo.")
     encerrar_sessao(webBot)
 
@@ -618,9 +641,23 @@ def run_bot_with_retry(df: pd.DataFrame, log_queue: queue.Queue,
             return
 
         if tentativa > 1:
-            log_queue.put(
-                f"  🔁 [{timestamp_sp()}] | Tentativa {tentativa} — retomando a partir do ID seguinte ao último salvo."
-            )
+                    ultimo = get_ultimo_progresso(usuario)
+                    ultimo_id_info = f"ID {ultimo['ultimo_id']}" if ultimo else "início"
+                    log_queue.put(
+                        f"  🔁 [{timestamp_sp()}] | {'='*40}"
+                    )
+                    log_queue.put(
+                        f"  🔁 [{timestamp_sp()}] | RETOMADA AUTOMÁTICA — Tentativa {tentativa}/{MAX_TENTATIVAS}"
+                    )
+                    log_queue.put(
+                        f"  🔁 [{timestamp_sp()}] | Último registro salvo com sucesso: {ultimo_id_info}"
+                    )
+                    log_queue.put(
+                        f"  🔁 [{timestamp_sp()}] | Continuando a partir do próximo registro..."
+                    )
+                    log_queue.put(
+                        f"  🔁 [{timestamp_sp()}] | {'='*40}"
+                    )
 
         try:
             run_bot(df_fatia, log_queue, usuario, senha, campo_id_map, resultado)
@@ -649,6 +686,7 @@ def aguardar_e_iniciar(data_hora: datetime, df: pd.DataFrame, log_queue: queue.Q
     espera = (data_hora - agora).total_seconds()
     if espera > 0:
         time.sleep(espera)
+    resultado['iniciando'] = True  # ← sinaliza que chegou a hora
     run_bot_with_retry(df, log_queue, usuario, senha, campo_id_map, resultado)
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -663,8 +701,8 @@ if 'resultado'  not in st.session_state: st.session_state.resultado = {}
 if 'agendado_em' not in st.session_state: st.session_state.agendado_em = None
 if 'aguardando'  not in st.session_state: st.session_state.aguardando  = False
 
-st.set_page_config(page_title="RPA Bradesco (MVC=32)", page_icon="🤖", layout="centered")
-st.title("🤖 RPA Bradesco (MVC=32) — Atualização em Lote")
+st.set_page_config(page_title=CONFIG_APP['titulo_tela'], page_icon="🤖", layout="centered")
+st.title(f"🤖 {CONFIG_APP['titulo_tela']} — Atualização em Lote")
 st.markdown("---")
 
 st.subheader("🔐 Credenciais MVC")
@@ -754,8 +792,16 @@ if uploaded_file is not None:
                             f"✅ Agendado para {dt_agendado.strftime('%d/%m/%Y às %H:%M')} (horário de SP)")
                             
     if st.session_state.aguardando and not st.session_state.running:
-        dt = st.session_state.agendado_em
-        st.info(f"⏳ Processamento agendado para **{dt.strftime('%d/%m/%Y às %H:%M')}** (horário de SP). Aguardando...")
+        # Verifica se a thread já sinalizou que chegou a hora
+        if st.session_state.resultado.get('iniciando'):
+            st.session_state.running   = True
+            st.session_state.aguardando = False
+            st.rerun()
+        else:
+            dt = st.session_state.agendado_em
+            st.info(f"⏳ Processamento agendado para **{dt.strftime('%d/%m/%Y às %H:%M')}** (horário de SP). Aguardando...")
+            time.sleep(1)
+            st.rerun()
 
     if st.session_state.running:
         st.markdown("### 📋 Log de Processamento")

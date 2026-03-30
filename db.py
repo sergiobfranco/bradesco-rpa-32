@@ -106,3 +106,14 @@ def get_ultimo_progresso(usuario: str):
             (usuario,)
         ).fetchone()
     return dict(row) if row else None
+
+def remover_erro(usuario: str, id_noticia: str):
+    init_db()
+    with sqlite3.connect(DB_PATH) as conn:
+        try:
+            conn.execute(
+                "DELETE FROM erros WHERE usuario = ? AND id_noticia = ?",
+                (usuario, id_noticia)
+            )
+        except Exception:
+            pass
