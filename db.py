@@ -112,8 +112,8 @@ def remover_erro(usuario: str, id_noticia: str):
     with sqlite3.connect(DB_PATH) as conn:
         try:
             conn.execute(
-                "DELETE FROM erros WHERE usuario = ? AND id_noticia = ?",
-                (usuario, id_noticia)
+                "DELETE FROM erros WHERE id_noticia = ?",
+                (id_noticia,)
             )
         except Exception:
             pass
