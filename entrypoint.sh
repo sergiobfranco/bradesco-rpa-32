@@ -5,9 +5,14 @@ set -e
 Xvfb :99 -screen 0 1280x1024x24 -ac &
 sleep 1
 
+export STREAMLIT_SERVER_MAX_UPLOAD_SIZE=200
+export STREAMLIT_SERVER_ENABLE_WEBSOCKET_COMPRESSION=false
+export STREAMLIT_BROWSER_SERVER_ADDRESS=0.0.0.0
+
 # Inicia o Streamlit na porta 8581
 exec streamlit run bot_streamlit.py \
     --server.port=8581 \
     --server.address=0.0.0.0 \
     --server.headless=true \
-    --browser.gatherUsageStats=false
+    --browser.gatherUsageStats=false \
+    --server.maxMessageSize=200
