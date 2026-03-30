@@ -642,6 +642,15 @@ def run_bot_with_retry(df: pd.DataFrame, log_queue: queue.Queue,
     resultado['elapsed'] = time.time() - resultado['start_time']
     log_queue.put(None)
 
+def aguardar_e_iniciar(data_hora: datetime, df: pd.DataFrame, log_queue: queue.Queue,
+                        usuario: str, senha: str, campo_id_map: dict, resultado: dict):
+    """Fica em espera até data_hora e então dispara o run_bot_with_retry."""
+    agora = datetime.now(TZ_SP)
+    espera = (data_hora - agora).total_seconds()
+    if espera > 0:
+        time.sleep(espera)
+    run_bot_with_retry(df, log_queue, usuario, senha, campo_id_map, resultado)
+
 # ══════════════════════════════════════════════════════════════════════════
 # INTERFACE STREAMLIT
 # ══════════════════════════════════════════════════════════════════════════
@@ -651,6 +660,8 @@ if 'logs'       not in st.session_state: st.session_state.logs      = []
 if 'log_queue'  not in st.session_state: st.session_state.log_queue = None
 if 'thread'     not in st.session_state: st.session_state.thread    = None
 if 'resultado'  not in st.session_state: st.session_state.resultado = {}
+if 'agendado_em' not in st.session_state: st.session_state.agendado_em = None
+if 'aguardando'  not in st.session_state: st.session_state.aguardando  = False
 
 st.set_page_config(page_title="RPA Bradesco (MVC=32)", page_icon="🤖", layout="centered")
 st.title("🤖 RPA Bradesco (MVC=32) — Atualização em Lote")
@@ -684,10 +695,64 @@ if uploaded_file is not None:
     st.markdown("---")
 
     if not usuario or not senha:
-        st.warning("⚠️ Preencha o usuário e a senha antes de iniciar.")
-    else:
-        if st.button("▶ Iniciar Processamento", type="primary",
-                    disabled=st.session_state.running):
+            st.warning("⚠️ Preencha o usuário e a senha antes de iniciar.")
+        else:
+            col_btn, col_agendar = st.columns([1, 1])
+
+            with col_btn:
+                if st.button("▶ Iniciar Agora", type="primary",
+                            disabled=st.session_state.running or st.session_state.aguardando):
+                    campo_id_map = carregar_campo_id_map()
+                    st.session_state.logs      = []
+                    st.session_state.log_queue = queue.Queue()
+                    st.session_state.resultado = {}
+                    st.session_state.running   = True
+                    st.session_state.aguardando = False
+
+                    t = threading.Thread(
+                        target=run_bot_with_retry,
+                        args=(df, st.session_state.log_queue, usuario, senha,
+                            campo_id_map, st.session_state.resultado),
+                        daemon=True
+                    )
+                    st.session_state.thread = t
+                    t.start()
+
+            with col_agendar:
+                with st.expander("🕐 Agendar início"):
+                    data_agendada = st.date_input(
+                        "Data", value=datetime.now(TZ_SP).date())
+                    hora_agendada = st.time_input(
+                        "Hora (horário de SP)", value=datetime.now(TZ_SP).replace(
+                            second=0, microsecond=0).time())
+
+                    if st.button("📅 Confirmar Agendamento",
+                                disabled=st.session_state.running or st.session_state.aguardando):
+                        dt_agendado = TZ_SP.localize(
+                            datetime.combine(data_agendada, hora_agendada))
+
+                        if dt_agendado <= datetime.now(TZ_SP):
+                            st.error("❌ A data e hora devem ser no futuro.")
+                        else:
+                            campo_id_map = carregar_campo_id_map()
+                            st.session_state.logs       = []
+                            st.session_state.log_queue  = queue.Queue()
+                            st.session_state.resultado  = {}
+                            st.session_state.aguardando = True
+                            st.session_state.agendado_em = dt_agendado
+
+                            t = threading.Thread(
+                                target=aguardar_e_iniciar,
+                                args=(dt_agendado, df, st.session_state.log_queue,
+                                    usuario, senha, campo_id_map,
+                                    st.session_state.resultado),
+                                daemon=True
+                            )
+                            st.session_state.thread = t
+                            t.start()
+                            st.success(
+                                f"✅ Agendado para {dt_agendado.strftime('%d/%m/%Y às %H:%M')} (horário de SP)")
+                            
             campo_id_map = carregar_campo_id_map()
             st.session_state.logs      = []
             st.session_state.log_queue = queue.Queue()
@@ -702,6 +767,9 @@ if uploaded_file is not None:
             )
             st.session_state.thread = t
             t.start()
+    if st.session_state.aguardando and not st.session_state.running:
+        dt = st.session_state.agendado_em
+        st.info(f"⏳ Processamento agendado para **{dt.strftime('%d/%m/%Y às %H:%M')}** (horário de SP). Aguardando...")
 
     if st.session_state.running:
         st.markdown("### 📋 Log de Processamento")
@@ -733,6 +801,7 @@ if uploaded_file is not None:
         log_box.text('\n'.join(st.session_state.logs[-200:]))
 
         st.session_state.running = False
+        st.session_state.aguardando = False  # ← adicionar esta linha
         elapsed  = st.session_state.resultado.get('elapsed', 0)
         minutos  = int(elapsed // 60)
         segundos = int(elapsed % 60)
