@@ -1,14 +1,14 @@
 {
-    "Nivel - Asset": "aditional-options-2779",
-    "Nivel - BBI": "aditional-options-2781",
-    "Nivel - Ágora": "aditional-options-2782",
-    "Ocorrencias - Asset": "aditional-options-2792",
-    "Ocorrencias - BBI": "aditional-options-2794",
-    "Ocorrencias - Ágora": "aditional-options-2795",
-    "Nivel - Itaú": "aditional-options-2803",
-    "Nivel - Santander": "aditional-options-2804",
-    "Ocorrencias - Itaú": "aditional-options-2805",
-    "Ocorrencias - Santander": "aditional-options-2806",
-    "Nivel - Bradesco": "aditional-options-3023",
-    "Ocorrencias - Bradesco": "aditional-options-3024"
+    "Nivel - Asset":          {"id": "aditional-options-2779", "tipo": "dropdown"},
+    "Nivel - BBI":            {"id": "aditional-options-2781", "tipo": "dropdown"},
+    "Nivel - Ágora":          {"id": "aditional-options-2782", "tipo": "dropdown"},
+    "Ocorrencias - Asset":    {"id": "aditional-options-2792", "tipo": "dropdown"},
+    "Ocorrencias - BBI":      {"id": "aditional-options-2794", "tipo": "dropdown"},
+    "Ocorrencias - Ágora":    {"id": "aditional-options-2795", "tipo": "dropdown"},
+    "Nivel - Itaú":           {"id": "aditional-options-2803", "tipo": "dropdown"},
+    "Nivel - Santander":      {"id": "aditional-options-2804", "tipo": "dropdown"},
+    "Ocorrencias - Itaú":     {"id": "aditional-options-2805", "tipo": "dropdown"},
+    "Ocorrencias - Santander":{"id": "aditional-options-2806", "tipo": "dropdown"},
+    "Nivel - Bradesco":       {"id": "aditional-options-3023", "tipo": "dropdown"},
+    "Ocorrencias - Bradesco": {"id": "aditional-options-3024", "tipo": "dropdown"}
 }

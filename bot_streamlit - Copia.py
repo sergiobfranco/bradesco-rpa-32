@@ -550,67 +550,52 @@ def run_bot(df: pd.DataFrame, log_queue: queue.Queue, usuario: str, senha: str, 
         webBot.wait(3000)
         descartar_alerta(webBot)
 
-        for nome_coluna, cfg_campo in campo_id_map.items():
-                    if nome_coluna not in row.index:
-                        continue
+        for nome_coluna, id_elemento in campo_id_map.items():
+            if nome_coluna not in row.index:
+                continue
 
-                    valor_raw = row[nome_coluna]
-                    if pd.isna(valor_raw) or str(valor_raw).strip() == '':
-                        continue
+            valor_raw = row[nome_coluna]
+            if pd.isna(valor_raw) or str(valor_raw).strip() == '':
+                continue
 
-                    id_elemento = cfg_campo['id']
-                    tipo_campo  = cfg_campo.get('tipo', 'dropdown')
+            try:
+                valor_campo = str(int(float(str(valor_raw)))).zfill(2)
+            except (ValueError, TypeError):
+                valor_campo = str(valor_raw).strip()
 
-                    descartar_alerta(webBot)
-                    safe_click(webBot, id_elemento, By.ID, 5000,
-                            ensure_visible=True, ensure_clickable=True)
-                    webBot.wait(1000)
+            id_input    = id_elemento + '-input'
+            valor_js    = json.dumps(valor_campo)
 
-                    if tipo_campo == 'texto':
-                        valor_campo = str(valor_raw).strip()
-                        id_input    = id_elemento + '-input'
-                        webBot.execute_javascript(f"""
-        var el = document.getElementById('{id_input}');
-        if (!el) el = document.querySelector('input[id="{id_input}"], textarea[id="{id_input}"]');
-        if (el) {{
-            el.focus();
-            el.value = {json.dumps(valor_campo)};
-            el.dispatchEvent(new Event('input',  {{ bubbles: true }}));
-            el.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        }}
-        """)
-                        webBot.wait(1000)
+            descartar_alerta(webBot)
+            safe_click(webBot, id_elemento, By.ID, 5000,
+                       ensure_visible=True, ensure_clickable=True)
+            webBot.wait(1000)
 
-                    else:  # dropdown
-                        try:
-                            valor_campo = str(int(float(str(valor_raw)))).zfill(2)
-                        except (ValueError, TypeError):
-                            valor_campo = str(valor_raw).strip()
-
-                        id_input = id_elemento + '-input'
-                        valor_js = json.dumps(valor_campo)
-                        webBot.execute_javascript(f"""
-        var selectOriginal = document.querySelector('select[id="{id_input}"]');
-        if (selectOriginal) {{
-            var valorDesejado = {valor_js};
-            for (var i = 0; i < selectOriginal.options.length; i++) {{
-                if (selectOriginal.options[i].text.includes(valorDesejado)) {{
-                    selectOriginal.selectedIndex = i;
-                    var evChange = new Event('change', {{ bubbles: true }});
-                    selectOriginal.dispatchEvent(evChange);
-                    var evInput = new Event('input',  {{ bubbles: true }});
-                    selectOriginal.dispatchEvent(evInput);
-                    if (typeof $(selectOriginal).data('kendoDropDownList') !== 'undefined') {{
-                        $(selectOriginal).data('kendoDropDownList').value(selectOriginal.options[i].value);
-                        $(selectOriginal).data('kendoDropDownList').trigger('change');
-                    }}
-                    break;
-                }}
+            webBot.execute_javascript(f"""
+var selectOriginal = document.querySelector('select[id="{id_input}"]');
+if (selectOriginal) {{
+    var valorDesejado = {valor_js};
+    for (var i = 0; i < selectOriginal.options.length; i++) {{
+        if (selectOriginal.options[i].text.includes(valorDesejado)) {{
+            selectOriginal.selectedIndex = i;
+            var evChange = new Event('change', {{ bubbles: true }});
+            selectOriginal.dispatchEvent(evChange);
+            var evInput = new Event('input', {{ bubbles: true }});
+            selectOriginal.dispatchEvent(evInput);
+            if (typeof $(selectOriginal).data('kendoDropDownList') !== 'undefined') {{
+                $(selectOriginal).data('kendoDropDownList').value(selectOriginal.options[i].value);
+                $(selectOriginal).data('kendoDropDownList').trigger('change');
             }}
+            console.log('Selecionado: ' + valorDesejado);
+            break;
         }}
-        """)
-                        webBot.wait(5000)
-                        fechar_dropdowns_abertos(webBot)
+    }}
+}} else {{
+    console.log('Select não encontrado: {id_input}');
+}}
+""")
+            webBot.wait(5000)
+            fechar_dropdowns_abertos(webBot)
 
         # ── Seleciona "Liberada para MVC" ────────────────────────────────
         descartar_alerta(webBot)
