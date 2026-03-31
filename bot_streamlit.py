@@ -382,9 +382,10 @@ def iniciar_sessao(usuario: str, senha: str) -> WebBot:
         waiting_time=10000, ensure_visible=True, ensure_clickable=False)
     if campoPesquisaMVC is None:
         raise RuntimeError("Campo de pesquisa do MVC não encontrado — verifique se o login foi bem sucedido.")
-    campoPesquisaMVC.send_keys("BRADESCO")
+    mvc_nome = CONFIG_APP.get("mvc_nome")
+    campoPesquisaMVC.send_keys(mvc_nome)
 
-    safe_click(webBot, "//a[contains(text(), 'BRADESCO')]", By.XPATH, 10000,
+    safe_click(webBot, f"//a[normalize-space(text())='{mvc_nome}']", By.XPATH, 10000,
                ensure_visible=True)
     webBot.wait(3000)
     webBot.driver.execute_script("if(document.body) document.body.style.zoom='80%'")
@@ -718,7 +719,7 @@ st.subheader("📂 Arquivo de Lote")
 uploaded_file = st.file_uploader(
     "Selecione o arquivo XLSX",
     type=["xlsx"],
-    help="Arquivo com as colunas: Id, Titulo, Nivel Bradesco, Ocorrencias Bradesco, etc."
+    help="Arquivo com as colunas: Id, Titulo, Nivel ..., Ocorrencias ..., etc."
 )
 
 if uploaded_file is not None:
